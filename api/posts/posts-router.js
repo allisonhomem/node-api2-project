@@ -3,12 +3,10 @@ const express = require('express');
 const router = express.Router();
 const Posts = require('./posts-model.js');
 
-//invoking the express function
-const server = express();
 
 //ENDPOINTS
 //Returns **an array of all the post objects** contained in the database 
-server.get('/api/posts', async (req,res) => {
+router.get('/', async (req,res) => {
     try{
         const posts = await Posts.find()
 
@@ -28,7 +26,7 @@ server.get('/api/posts', async (req,res) => {
 })
 
 //Returns **the post object with the specified id** 
-server.get('/api/posts/:id', async (req,res) => {
+router.get('/:id', async (req,res) => {
     try{
         const {id} = req.params
         const post = await Posts.findById(id)
@@ -49,28 +47,31 @@ server.get('/api/posts/:id', async (req,res) => {
 })
 
 //Creates a post using the information sent inside the request body and returns **the newly created post object** 
-server.post('/api/posts', async (req,res) => {
-    try{
-        const {id, title, contents} = req.body
+router.post('/', async (req,res) => {
+    const {title, contents} = req.body
 
-        if(!title || !contents){
-            res.status(400).json({message: "Please provide title and contents for the post" })
-        }
-        else{
-            const newPost = await Posts.insert({id, title, contents})
-            res.status(201).json(newPost)
-        }
+    if(!title || !contents){
+        res.status(400).json({message: "Please provide title and contents for the post" })
     }
-    catch(err){
-        res.status(500).json({
-            message: err.message,
-            customMessage: "There was an error while saving the post to the database" 
-        })
+    else{
+        Posts.insert({title, contents})
+             .then(({id}) => {
+                return Posts.findById(id)
+             })
+             .then(post => {
+                res.status(201).json(post)
+             })
+             .catch((err) => {
+                res.status(500).json({
+                    message: err.message,
+                    customMessage: "There was an error while saving the post to the database" 
+                })
+            })
     }
 })
 
 //Updates the post with the specified id using data from the request body and **returns the modified document**, not the original
-server.put('/api/posts/:id', async (req,res) => {
+router.put('/:id', async (req,res) => {
     try{
 
     }
@@ -80,7 +81,7 @@ server.put('/api/posts/:id', async (req,res) => {
 })
 
 //Removes the post with the specified id and returns the **deleted post object**
-server.delete('/api/posts/:id', async (req,res) => {
+router.delete('/:id', async (req,res) => {
     try{
 
     }
@@ -90,7 +91,7 @@ server.delete('/api/posts/:id', async (req,res) => {
 })
 
 //Returns an **array of all the comment objects** associated with the post with the specified id  
-server.get('/api/posts/:id/comments', async (req,res) => {
+router.get('/:id/comments', async (req,res) => {
     try{
 
     }
